@@ -120,6 +120,12 @@ const AUTH_CHOICE_GROUP_DEFS: {
     hint: "Privacy-focused (uncensored models)",
     choices: ["venice-api-key"],
   },
+  {
+    value: "deepseek",
+    label: "DeepSeek",
+    hint: "OpenAI-compatible API",
+    choices: ["deepseek-api-key"],
+  },
 ];
 
 export function buildAuthChoiceOptions(params: {
@@ -153,6 +159,11 @@ export function buildAuthChoiceOptions(params: {
     value: "venice-api-key",
     label: "Venice AI API key",
     hint: "Privacy-focused inference (uncensored models)",
+  });
+  options.push({
+    value: "deepseek-api-key",
+    label: "DeepSeek API key",
+    hint: "OpenAI-compatible API (deepseek-chat, deepseek-coder)",
   });
   options.push({
     value: "github-copilot",

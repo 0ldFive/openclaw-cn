@@ -43,6 +43,17 @@ const XIAOMI_DEFAULT_COST = {
   cacheWrite: 0,
 };
 
+const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
+export const DEEPSEEK_DEFAULT_MODEL_ID = "deepseek-chat";
+const DEEPSEEK_DEFAULT_CONTEXT_WINDOW = 64000;
+const DEEPSEEK_DEFAULT_MAX_TOKENS = 4096;
+const DEEPSEEK_DEFAULT_COST = {
+  input: 0.14,
+  output: 0.28,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
 const MOONSHOT_BASE_URL = "https://api.moonshot.ai/v1";
 const MOONSHOT_DEFAULT_MODEL_ID = "kimi-k2.5";
 const MOONSHOT_DEFAULT_CONTEXT_WINDOW = 256000;
@@ -376,6 +387,33 @@ export function buildXiaomiProvider(): ProviderConfig {
   };
 }
 
+export function buildDeepseekProvider(): ProviderConfig {
+  return {
+    baseUrl: DEEPSEEK_BASE_URL,
+    api: "openai-completions",
+    models: [
+      {
+        id: DEEPSEEK_DEFAULT_MODEL_ID,
+        name: "DeepSeek Chat",
+        reasoning: false,
+        input: ["text"],
+        cost: DEEPSEEK_DEFAULT_COST,
+        contextWindow: DEEPSEEK_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: DEEPSEEK_DEFAULT_MAX_TOKENS,
+      },
+      {
+        id: "deepseek-coder",
+        name: "DeepSeek Coder",
+        reasoning: false,
+        input: ["text"],
+        cost: DEEPSEEK_DEFAULT_COST,
+        contextWindow: DEEPSEEK_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: DEEPSEEK_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}
+
 async function buildVeniceProvider(): Promise<ProviderConfig> {
   const models = await discoverVeniceModels();
   return {
@@ -451,6 +489,13 @@ export async function resolveImplicitProviders(params: {
     resolveApiKeyFromProfiles({ provider: "xiaomi", store: authStore });
   if (xiaomiKey) {
     providers.xiaomi = { ...buildXiaomiProvider(), apiKey: xiaomiKey };
+  }
+
+  const deepseekKey =
+    resolveEnvApiKeyVarName("deepseek") ??
+    resolveApiKeyFromProfiles({ provider: "deepseek", store: authStore });
+  if (deepseekKey) {
+    providers.deepseek = { ...buildDeepseekProvider(), apiKey: deepseekKey };
   }
 
   // Ollama provider - only add if explicitly configured
