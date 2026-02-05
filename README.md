@@ -59,6 +59,12 @@ pnpm config set registry https://registry.npmmirror.com/
 git clone https://gitee.com/OpenClaw-CN/openclaw-cn.git
 cd openclaw-cn
 
+# 1.1 选择已发布版本分支，例如：v2026.2.2-cn
+git tag
+git checkout v2026.2.2-cn
+
+# 1.2 保持当前分支：master
+
 # 2. 安装依赖 (速度飞快 🚀)
 pnpm install
 
@@ -70,6 +76,12 @@ pnpm build
 
 # 5. 启动初始化向导
 pnpm openclaw onboard --install-daemon
+
+# 6. 使用初始化向导安装完毕后，再次启动网关（关闭后再次启动）
+node openclaw.mjs gateway --port 18789 --verbose
+
+# 6.1 再次启动网关后，如何再次打开管理页面
+node openclaw.mjs dashboard
 ```
 
 > **💡 开发模式**: 如果你想修改源码并实时预览，请使用 `pnpm gateway:watch` 启动。
