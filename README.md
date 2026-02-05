@@ -80,7 +80,7 @@ pnpm openclaw onboard --install-daemon
 # 6. 使用初始化向导安装完毕后，再次启动网关（关闭后再次启动）
 node openclaw.mjs gateway --port 18789 --verbose
 
-# 6.1 再次启动网关后，如何再次打开管理页面
+# 6.1 再次启动网关后，如何再次打开管理页面（管理页面已关闭的前提下）
 node openclaw.mjs dashboard
 ```
 
