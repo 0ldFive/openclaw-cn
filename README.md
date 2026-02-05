@@ -115,6 +115,23 @@ pnpm openclaw onboard --install-daemon
 
 ---
 
+## 🤝 参与贡献 (Contributing)
+
+OpenClaw CN 是一个纯粹的、由开发者驱动的开源项目。
+
+**🚫 我们暂时不接受任何形式的资金捐赠 (No Donations Needed)。**
+
+我们相信，对于现阶段的社区而言，资金并不是瓶颈。**一行高质量的代码、一个完善的文档 PR、或者一次详尽的 Bug 报告，比金钱更有价值。**
+
+我们需要你：
+1.  **代码贡献**：特别是 **飞书/钉钉连接器**、**中文搜索增强** 等本地化插件的开发。
+2.  **文档完善**：帮助我们将更多英文文档翻译为中文，或撰写实战教程。
+3.  **测试反馈**：在 Windows/Mac/Linux 不同环境下测试 DeepSeek 的表现并提交 Issue。
+
+👉 **查看详细贡献指南**: [https://open-claw.org.cn/plugins/contribution](https://open-claw.org.cn/plugins/contribution)
+
+---
+
 ## ⚠️ 免责声明
 
 本项目基于 [OpenClaw Official](https://github.com/openclaw/openclaw) 构建。
