@@ -190,6 +190,18 @@ OpenClaw CN 是一个纯粹的、由开发者驱动的开源项目。
 
 ---
 
+## 🔥 加入“燎原”计划
+
+我们要寻找前 100 位核心贡献者。
+如果你想第一时间体验 DeepSeek 适配版，或者想与我们一起从 0 到 1 建设生态，
+欢迎加入 OpenClaw CN 早期共建群。
+
+<p align="left">
+  <img src="./wechat-group-qr.jpg" alt="OpenClaw CN 交流群" width="200">
+</p>
+
+---
+
 ## ⚠️ 免责声明
 
 本项目基于 [OpenClaw Official](https://github.com/openclaw/openclaw) 构建。
