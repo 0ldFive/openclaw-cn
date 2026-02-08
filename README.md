@@ -88,6 +88,52 @@ node openclaw.mjs dashboard
 
 ---
 
+## 🗑️ 卸载说明 (Uninstall)
+
+如果你需要移除 OpenClaw 服务，请根据操作系统执行以下命令。
+*(注：如果 CLI 命令 `openclaw uninstall` 无法使用，请手动执行以下步骤)*
+
+### 🍎 macOS (launchd)
+默认标签是 `bot.molt.gateway`（或 `bot.molt.<profile>`；旧版 `com.openclaw.*` 可能仍然存在）：
+```bash
+# 1. 停止并移除服务
+launchctl bootout gui/$UID/bot.molt.gateway
+rm -f ~/Library/LaunchAgents/bot.molt.gateway.plist
+
+# 2. (可选) 清理遗留的旧版配置
+# 如果使用了配置文件，请将标签和 plist 名称替换为 bot.molt.<profile>
+# 如果存在任何旧版 com.openclaw.* plist，请将其移除。
+rm -f ~/Library/LaunchAgents/com.openclaw.*
+```
+
+### 🐧 Linux (systemd)
+默认单元名称是 `openclaw-gateway.service`（或 `openclaw-gateway-<profile>.service`）：
+```bash
+# 1. 停止用户级服务
+systemctl --user disable --now openclaw-gateway.service
+
+# 2. 移除服务文件并重新加载
+rm -f ~/.config/systemd/user/openclaw-gateway.service
+systemctl --user daemon-reload
+```
+
+### 🪟 Windows (计划任务)
+默认任务名称是 `OpenClaw Gateway`（或 `OpenClaw Gateway (<profile>)`）。
+
+**CMD (命令提示符):**
+```cmd
+schtasks /Delete /F /TN "OpenClaw Gateway"
+rmdir /s /q "%USERPROFILE%\.openclaw"
+```
+
+**PowerShell:**
+```powershell
+Unregister-ScheduledTask -TaskName "OpenClaw Gateway" -Confirm:$false
+Remove-Item -Path "$env:USERPROFILE\.openclaw" -Recurse -Force
+```
+
+---
+
 ## 🧠 模型配置 (DeepSeek 原生支持)
 
 得益于 OpenClaw CN 的源码改造，DeepSeek 已成为系统的一级公民，配置极其简单。
