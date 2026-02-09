@@ -188,6 +188,7 @@
   "pnpm": {
     "minimumReleaseAge": 2880,
     "overrides": {
+	  "libsignal": "git+https://gitee.com/OpenClaw-CN/libsignal-node.git",
       "fast-xml-parser": "5.3.4",
       "form-data": "2.5.4",
       "@hono/node-server>hono": "4.11.7",
