@@ -63,7 +63,7 @@ cd openclaw-cn
 git tag
 git checkout v2026.2.2-cn
 
-# 1.2 保持当前分支：master
+# 1.2 保持当前分支：main
 
 # 2. 安装依赖 (速度飞快 🚀)
 pnpm install
