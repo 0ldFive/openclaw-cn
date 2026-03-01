@@ -1,15 +1,52 @@
 import { html } from "lit";
 import { repeat } from "lit/directives/repeat.js";
-import type { AppViewState } from "./app-view-state.ts";
-import type { ThemeTransitionContext } from "./theme-transition.ts";
-import type { ThemeMode } from "./theme.ts";
-import type { SessionsListResult } from "./types.ts";
+import { i18n, isSupportedLocale, t } from "../i18n/index.ts";
+import type { Locale } from "../i18n/index.ts";
 import { refreshChat } from "./app-chat.ts";
 import { syncUrlWithSessionKey } from "./app-settings.ts";
+import type { AppViewState } from "./app-view-state.ts";
 import { OpenClawApp } from "./app.ts";
 import { ChatState, loadChatHistory } from "./controllers/chat.ts";
 import { icons } from "./icons.ts";
 import { iconForTab, pathForTab, titleForTab, type Tab } from "./navigation.ts";
+import type { ThemeTransitionContext } from "./theme-transition.ts";
+import type { ThemeMode } from "./theme.ts";
+import type { SessionsListResult } from "./types.ts";
+
+type SessionDefaultsSnapshot = {
+  mainSessionKey?: string;
+  mainKey?: string;
+};
+
+function resolveSidebarChatSessionKey(state: AppViewState): string {
+  const snapshot = state.hello?.snapshot as
+    | { sessionDefaults?: SessionDefaultsSnapshot }
+    | undefined;
+  const mainSessionKey = snapshot?.sessionDefaults?.mainSessionKey?.trim();
+  if (mainSessionKey) {
+    return mainSessionKey;
+  }
+  const mainKey = snapshot?.sessionDefaults?.mainKey?.trim();
+  if (mainKey) {
+    return mainKey;
+  }
+  return "main";
+}
+
+function resetChatStateForSessionSwitch(state: AppViewState, sessionKey: string) {
+  state.sessionKey = sessionKey;
+  state.chatMessage = "";
+  state.chatStream = null;
+  (state as unknown as OpenClawApp).chatStreamStartedAt = null;
+  state.chatRunId = null;
+  (state as unknown as OpenClawApp).resetToolStream();
+  (state as unknown as OpenClawApp).resetChatScroll();
+  state.applySettings({
+    ...state.settings,
+    sessionKey,
+    lastActiveSessionKey: sessionKey,
+  });
+}
 
 export function renderTab(state: AppViewState, tab: Tab) {
   const href = pathForTab(tab, state.basePath);
@@ -29,6 +66,13 @@ export function renderTab(state: AppViewState, tab: Tab) {
           return;
         }
         event.preventDefault();
+        if (tab === "chat") {
+          const mainSessionKey = resolveSidebarChatSessionKey(state);
+          if (state.sessionKey !== mainSessionKey) {
+            resetChatStateForSessionSwitch(state, mainSessionKey);
+            void state.loadAssistantIdentity();
+          }
+        }
         state.setTab(tab);
       }}
       title=${titleForTab(tab)}
@@ -105,7 +149,11 @@ export function renderChatControls(state: AppViewState) {
               lastActiveSessionKey: next,
             });
             void state.loadAssistantIdentity();
-            syncUrlWithSessionKey(next, true);
+            syncUrlWithSessionKey(
+              state as unknown as Parameters<typeof syncUrlWithSessionKey>[0],
+              next,
+              true,
+            );
             void loadChatHistory(state as unknown as ChatState);
           }}
         >
@@ -113,7 +161,7 @@ export function renderChatControls(state: AppViewState) {
             sessionOptions,
             (entry) => entry.key,
             (entry) =>
-              html`<option value=${entry.key}>
+              html`<option value=${entry.key} title=${entry.key}>
                 ${entry.displayName ?? entry.key}
               </option>`,
           )}
@@ -122,11 +170,25 @@ export function renderChatControls(state: AppViewState) {
       <button
         class="btn btn--sm btn--icon"
         ?disabled=${state.chatLoading || !state.connected}
-        @click=${() => {
-          (state as unknown as OpenClawApp).resetToolStream();
-          void refreshChat(state as unknown as Parameters<typeof refreshChat>[0]);
+        @click=${async () => {
+          const app = state as unknown as OpenClawApp;
+          app.chatManualRefreshInFlight = true;
+          app.chatNewMessagesBelow = false;
+          await app.updateComplete;
+          app.resetToolStream();
+          try {
+            await refreshChat(state as unknown as Parameters<typeof refreshChat>[0], {
+              scheduleScroll: false,
+            });
+            app.scrollToBottom({ smooth: true });
+          } finally {
+            requestAnimationFrame(() => {
+              app.chatManualRefreshInFlight = false;
+              app.chatNewMessagesBelow = false;
+            });
+          }
         }}
-        title="Refresh chat data"
+        title=${t("chat.refreshTitle")}
       >
         ${refreshIcon}
       </button>
@@ -144,11 +206,7 @@ export function renderChatControls(state: AppViewState) {
           });
         }}
         aria-pressed=${showThinking}
-        title=${
-          disableThinkingToggle
-            ? "Disabled during onboarding"
-            : "Toggle assistant thinking/working output"
-        }
+        title=${disableThinkingToggle ? t("chat.onboardingDisabled") : t("chat.thinkingToggle")}
       >
         ${icons.brain}
       </button>
@@ -165,22 +223,13 @@ export function renderChatControls(state: AppViewState) {
           });
         }}
         aria-pressed=${focusActive}
-        title=${
-          disableFocusToggle
-            ? "Disabled during onboarding"
-            : "Toggle focus mode (hide sidebar + page header)"
-        }
+        title=${disableFocusToggle ? t("chat.onboardingDisabled") : t("chat.focusToggle")}
       >
         ${focusIcon}
       </button>
     </div>
   `;
 }
-
-type SessionDefaultsSnapshot = {
-  mainSessionKey?: string;
-  mainKey?: string;
-};
 
 function resolveMainSessionKey(
   hello: AppViewState["hello"],
@@ -201,16 +250,116 @@ function resolveMainSessionKey(
   return null;
 }
 
-function resolveSessionDisplayName(key: string, row?: SessionsListResult["sessions"][number]) {
-  const label = row?.label?.trim();
-  if (label) {
-    return `${label} (${key})`;
+/* ── Channel display labels (i18n) ─────────────────────── */
+const KNOWN_CHANNEL_KEYS = [
+  "bluebubbles",
+  "telegram",
+  "discord",
+  "signal",
+  "slack",
+  "whatsapp",
+  "matrix",
+  "email",
+  "sms",
+] as const;
+
+function getChannelLabel(channel: string): string {
+  if (KNOWN_CHANNEL_KEYS.includes(channel as (typeof KNOWN_CHANNEL_KEYS)[number])) {
+    return t(`sessions.channel.${channel}`);
   }
-  const displayName = row?.displayName?.trim();
-  if (displayName) {
-    return displayName;
+  return capitalize(channel);
+}
+
+/** Parsed type / context extracted from a session key. */
+export type SessionKeyInfo = {
+  /** Prefix for typed sessions (Subagent:/Cron:). Empty for others. */
+  prefix: string;
+  /** Human-readable fallback when no label / displayName is available. */
+  fallbackName: string;
+};
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
+ * Parse a session key to extract type information and a human-readable
+ * fallback display name.  Exported for testing.
+ */
+export function parseSessionKey(key: string): SessionKeyInfo {
+  // ── Main session ─────────────────────────────────
+  if (key === "main" || key === "agent:main:main") {
+    return { prefix: "", fallbackName: t("sessions.fallback.mainSession") };
   }
-  return key;
+
+  // ── Subagent ─────────────────────────────────────
+  if (key.includes(":subagent:")) {
+    const sub = t("sessions.fallback.subagent");
+    return { prefix: sub, fallbackName: sub };
+  }
+
+  // ── Cron job ─────────────────────────────────────
+  if (key.includes(":cron:")) {
+    return {
+      prefix: t("sessions.fallback.cronPrefix"),
+      fallbackName: t("sessions.fallback.cronJob"),
+    };
+  }
+
+  // ── Direct chat  (agent:<x>:<channel>:direct:<id>) ──
+  const directMatch = key.match(/^agent:[^:]+:([^:]+):direct:(.+)$/);
+  if (directMatch) {
+    const channel = directMatch[1];
+    const identifier = directMatch[2];
+    const channelLabel = getChannelLabel(channel);
+    return { prefix: "", fallbackName: `${channelLabel} · ${identifier}` };
+  }
+
+  // ── Group chat  (agent:<x>:<channel>:group:<id>) ────
+  const groupMatch = key.match(/^agent:[^:]+:([^:]+):group:(.+)$/);
+  if (groupMatch) {
+    const channel = groupMatch[1];
+    const channelLabel = getChannelLabel(channel);
+    return { prefix: "", fallbackName: `${channelLabel}${t("sessions.groupSuffix")}` };
+  }
+
+  // ── Channel-prefixed legacy keys (e.g. "bluebubbles:g-…") ──
+  for (const ch of KNOWN_CHANNEL_KEYS) {
+    if (key === ch || key.startsWith(`${ch}:`)) {
+      return {
+        prefix: "",
+        fallbackName: `${getChannelLabel(ch)}${t("sessions.sessionSuffix")}`,
+      };
+    }
+  }
+
+  // ── Unknown — return key as-is ───────────────────
+  return { prefix: "", fallbackName: key };
+}
+
+export function resolveSessionDisplayName(
+  key: string,
+  row?: SessionsListResult["sessions"][number],
+): string {
+  const label = row?.label?.trim() || "";
+  const displayName = row?.displayName?.trim() || "";
+  const { prefix, fallbackName } = parseSessionKey(key);
+
+  const applyTypedPrefix = (name: string): string => {
+    if (!prefix) {
+      return name;
+    }
+    const prefixPattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}\\s*`, "i");
+    return prefixPattern.test(name) ? name : `${prefix} ${name}`;
+  };
+
+  if (label && label !== key) {
+    return applyTypedPrefix(label);
+  }
+  if (displayName && displayName !== key) {
+    return applyTypedPrefix(displayName);
+  }
+  return fallbackName;
 }
 
 function resolveSessionOptions(
@@ -260,6 +409,33 @@ function resolveSessionOptions(
 
 const THEME_ORDER: ThemeMode[] = ["system", "light", "dark"];
 
+const LOCALE_OPTIONS: Locale[] = ["en", "zh-CN", "zh-TW", "pt-BR"];
+
+export function renderLanguageSelect(state: AppViewState) {
+  const current = i18n.getLocale();
+  return html`
+    <div class="lang-select" role="group" aria-label=${t("overview.access.language")}>
+      <select
+        class="lang-select__select"
+        .value=${current}
+        title=${t("overview.access.language")}
+        @change=${(e: Event) => {
+          const v = (e.target as HTMLSelectElement).value;
+          if (isSupportedLocale(v)) {
+            void i18n.setLocale(v);
+            state.applySettings({ ...state.settings, locale: v });
+          }
+        }}
+      >
+        ${LOCALE_OPTIONS.map(
+          (loc) =>
+            html`<option value=${loc}>${t(loc === "zh-CN" ? "languages.zhCN" : loc === "zh-TW" ? "languages.zhTW" : loc === "pt-BR" ? "languages.ptBR" : "languages.en")}</option>`,
+        )}
+      </select>
+    </div>
+  `;
+}
+
 export function renderThemeToggle(state: AppViewState) {
   const index = Math.max(0, THEME_ORDER.indexOf(state.theme));
   const applyTheme = (next: ThemeMode) => (event: MouseEvent) => {
@@ -274,14 +450,14 @@ export function renderThemeToggle(state: AppViewState) {
 
   return html`
     <div class="theme-toggle" style="--theme-index: ${index};">
-      <div class="theme-toggle__track" role="group" aria-label="Theme">
+      <div class="theme-toggle__track" role="group" aria-label=${t("theme.label")}>
         <span class="theme-toggle__indicator"></span>
         <button
           class="theme-toggle__button ${state.theme === "system" ? "active" : ""}"
           @click=${applyTheme("system")}
           aria-pressed=${state.theme === "system"}
-          aria-label="System theme"
-          title="System"
+          aria-label=${t("theme.systemAria")}
+          title=${t("theme.system")}
         >
           ${renderMonitorIcon()}
         </button>
@@ -289,8 +465,8 @@ export function renderThemeToggle(state: AppViewState) {
           class="theme-toggle__button ${state.theme === "light" ? "active" : ""}"
           @click=${applyTheme("light")}
           aria-pressed=${state.theme === "light"}
-          aria-label="Light theme"
-          title="Light"
+          aria-label=${t("theme.lightAria")}
+          title=${t("theme.light")}
         >
           ${renderSunIcon()}
         </button>
@@ -298,8 +474,8 @@ export function renderThemeToggle(state: AppViewState) {
           class="theme-toggle__button ${state.theme === "dark" ? "active" : ""}"
           @click=${applyTheme("dark")}
           aria-pressed=${state.theme === "dark"}
-          aria-label="Dark theme"
-          title="Dark"
+          aria-label=${t("theme.darkAria")}
+          title=${t("theme.dark")}
         >
           ${renderMoonIcon()}
         </button>

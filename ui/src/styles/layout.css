@@ -190,6 +190,17 @@
   height: 12px;
 }
 
+.topbar-status .lang-select__select {
+  height: 32px;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+
 /* ===========================================
    Navigation Sidebar
    =========================================== */

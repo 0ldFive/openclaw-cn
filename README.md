@@ -5,7 +5,7 @@
     <b> 🦞 你的私人 AI 助手 (Personal AI Assistant)</b>
   </p>
   <p>
-    <code>Based on OpenClaw v2026.2.2</code>
+    <code>Based on OpenClaw v2026.2.23</code>
   </p>
   <p>
     更安全 · 更懂中文 · 适配 DeepSeek 的 Local Agent 基础设施
@@ -27,16 +27,17 @@
 * 🧠 **国产大脑**：源码内置 **DeepSeek-V3** / **Qwen** 支持，开箱即用，告别昂贵的 Claude。
 * 🛡️ **安全审计**：代码经社区人工审计，剔除潜在风险与不必要的遥测。
 * ⚡ **极速下载**：预配置 pnpm 国内镜像源，安装依赖“飞”一般的感觉。
-* 🔌 **生态落地**：正在企业微信、钉钉等连接器。
+* 🔌 **生态落地**：已集成飞书并开发企业微信、钉钉等连接器。
 
 ## 🚀 快速开始 (Quick Start)
 
 请访问我们的文档站查看保姆级教程：
+这里探索了极速的一键安装方式，网站内提供了针对 Windows 原生环境、Linux、WSL 与 macOS 的保姆级图文部署指南。
+
 👉 **[https://open-claw.org.cn/guide/getting-started](https://open-claw.org.cn/guide/getting-started)**
 
 ---
-
-## ⚡️ 源码安装与开发 (中国网络优化)
+## ⚡️ 源码安装（贡献者/开发）
 
 为了确保在国内网络环境下依赖能快速下载，我们**强制推荐**使用 `pnpm` 并配置国内镜像源。
 
@@ -59,13 +60,7 @@ pnpm config set registry https://registry.npmmirror.com/
 git clone https://gitee.com/OpenClaw-CN/openclaw-cn.git
 cd openclaw-cn
 
-# 1.1 选择已发布版本分支，例如：v2026.2.2-cn
-git tag
-git checkout v2026.2.2-cn
-
-# 1.2 保持当前分支：main
-
-# 2. 安装依赖 (速度飞快 🚀)
+# 2. 安装依赖
 pnpm install
 
 # 3. 首次构建 UI 依赖
@@ -78,10 +73,10 @@ pnpm build
 pnpm openclaw onboard --install-daemon
 
 # 6. 使用初始化向导安装完毕后，再次启动网关（关闭后再次启动）
-node openclaw.mjs gateway --port 18789 --verbose
+pnpm openclaw gateway
 
 # 6.1 再次启动网关后，如何再次打开管理页面（管理页面已关闭的前提下）
-node openclaw.mjs dashboard
+pnpm openclaw dashboard
 ```
 
 > **💡 开发模式**: 如果你想修改源码并实时预览，请使用 `pnpm gateway:watch` 启动。
@@ -173,20 +168,26 @@ Remove-Item -Path "$env:USERPROFILE\.openclaw" -Recurse -Force
 
 ---
 
-## 🤝 参与贡献 (Contributing)
+## 🤝 参与贡献与生态共建 (Contributing & Sponsorship)
 
-OpenClaw CN 是一个纯粹的、由开发者驱动的开源项目。
+OpenClaw CN 是一场由开发者驱动的本地化“闪电战”。目前，我们已成功筑基，完成了 DeepSeek 等国产大模型的源码级适配。现在，我们正向着路线图的第二阶段——**“连接中国互联网生态”** 全面冲刺！
 
-**🚫 我们暂时不接受任何形式的资金捐赠 (No Donations Needed)。**
+我们深知，一个繁荣的开源生态离不开所有人的共建。无论是提交一行高质量的代码，还是提供生态赞助，都是在为中国 Agent 基础设施添砖加瓦。
 
-我们相信，对于现阶段的社区而言，资金并不是瓶颈。**一行高质量的代码、一个完善的文档 PR、或者一次详尽的 Bug 报告，比金钱更有价值。**
-
-我们需要你：
-1.  **代码贡献**：特别是 **飞书/钉钉连接器**、**中文搜索增强** 等本地化插件的开发。
-2.  **文档完善**：帮助我们将更多英文文档翻译为中文，或撰写实战教程。
-3.  **测试反馈**：在 Windows/Mac/Linux 不同环境下测试 DeepSeek 的表现并提交 Issue。
+### 🛠️ 成为核心贡献者 (Code & Community)
+这个时代属于行动者，我们急需你的加入来推进以下关键战役：
+1.  **生态连接器开发 (核心)**：参与开发 **企业微信、钉钉** 等国民级应用的接入插件，赋予 AI 真正接管繁琐工作的手脚。
+2.  **极简部署与测试**：在多平台下测试源码安装流程，或参与构建 Docker 模板等运维自动化方案，发现 Bug 请随时提交 Issue。
+3.  **文档与布道**：撰写你的 Agent 实战教程，分享给更多开发者。
 
 👉 **查看详细贡献指南**: [https://open-claw.org.cn/plugins/contribution](https://open-claw.org.cn/plugins/contribution)
+
+### 💎 商业赞助 (Sponsorship)
+我们坚信，开源生态的长期繁荣离不开健康的商业正循环。我们对商业化保持开放态度，并欢迎与开发者生态高度契合的优秀企业成为我们的战略赞助商。
+
+如果你所在的团队希望通过支持开源获取本站高价值的开发者品牌曝光，欢迎联系社区主理人洽谈商业赞助事宜。
+
+让我们一起让优秀的开源项目在中国更好地落地！
 
 ---
 
