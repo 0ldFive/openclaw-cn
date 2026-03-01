@@ -319,7 +319,12 @@ echo ""
 
 if [[ "$NO_ONBOARD" != "1" ]]; then
     ui_info "正在启动初始化..."
-    "$WRAPPER" onboard || true
+    if [[ -r /dev/tty && -w /dev/tty ]]; then
+        exec </dev/tty
+        exec "$WRAPPER" onboard
+    else
+        "$WRAPPER" onboard || true
+    fi
 else
     ui_info "已跳过初始化。需要时请运行: openclaw onboard"
 fi
