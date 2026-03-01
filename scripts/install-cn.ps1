@@ -215,7 +215,11 @@ function Main {
     Write-Host ""
     if (-not $NoOnboard) {
         Write-Host "Starting onboarding..." -ForegroundColor Cyan
-        & $cmdPath onboard
+        if ([Console]::IsInputRedirected) {
+            & cmd.exe /c "`"$cmdPath`" onboard < con"
+        } else {
+            & $cmdPath onboard
+        }
     } else {
         Write-Host "Skipped onboarding. Run: openclaw onboard" -ForegroundColor Gray
     }
