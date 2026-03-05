@@ -4,7 +4,7 @@ node_modules
 .openclaw-node-path
 docker-compose.extra.yml
 dist
-pnpm-lock.yaml
+#pnpm-lock.yaml
 bun.lock
 bun.lockb
 coverage
