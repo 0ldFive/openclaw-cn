@@ -31,11 +31,7 @@ jobs:
         run: pnpm prune --prod
 
       - name: Create Zip
-        shell: powershell
-        run: |
-          $items = @("dist", "package.json", "node_modules", "openclaw.mjs", "README.md", "LICENSE")
-          $existingItems = $items | Where-Object { Test-Path $_ }
-          Compress-Archive -Path $existingItems -DestinationPath openclaw-windows-amd64.zip -CompressionLevel Optimal
+        run: 7z a -tzip openclaw-windows-amd64.zip dist package.json node_modules openclaw.mjs README.md LICENSE
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
