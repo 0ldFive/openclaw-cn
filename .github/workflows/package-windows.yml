@@ -1,0 +1,44 @@
+name: Package Windows AMD64
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  package-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+
+      - name: Setup Node environment
+        uses: ./.github/actions/setup-node-env
+        with:
+          install-bun: "false"
+
+      - name: Build UI
+        run: pnpm ui:build
+
+      - name: Build
+        run: pnpm build
+
+      - name: Prune dev dependencies
+        run: pnpm prune --prod
+
+      - name: Create Zip
+        shell: powershell
+        run: |
+          $items = @("dist", "package.json", "node_modules", "openclaw.mjs", "README.md", "LICENSE")
+          $existingItems = $items | Where-Object { Test-Path $_ }
+          Compress-Archive -Path $existingItems -DestinationPath openclaw-windows-amd64.zip -CompressionLevel Optimal
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openclaw-windows-amd64
+          path: openclaw-windows-amd64.zip
